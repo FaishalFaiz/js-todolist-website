@@ -1,7 +1,19 @@
 const todos = [];
 const RENDER_EVENT = 'render-todo';
+const SAVED_EVENT = 'save-todo';
+const DATA_KEY = 'SAVED_DATA';
+
+function isStorageExist() {
+    if (typeof (Storage) === undefined) {
+        alert('Browser kamu outdated!');
+        return false;
+    } else {
+        return true;
+    }
+}
 
 document.addEventListener('DOMContentLoaded', function () {
+    loadDataFromStorage();
     const formulir = document.getElementById('form');
     formulir.addEventListener('submit', function (e) {
         e.preventDefault();
@@ -18,6 +30,7 @@ function addTodo() {
     const objekTugas = generateTodoObject(tugasID, tugas, tanggal, false);
     todos.push(objekTugas);
     document.dispatchEvent(new Event(RENDER_EVENT));
+    saveData();
 }
 
 function generateId() {
@@ -118,6 +131,8 @@ function tugasSelesai(tugasId) {
     todoTarget.isCompleted = true;
     console.log(todoTarget);
     document.dispatchEvent(new Event(RENDER_EVENT));
+    saveData();
+
 }
 
 function batalSelesai(tugasId) {
@@ -125,6 +140,7 @@ function batalSelesai(tugasId) {
     if (todoTarget == null) return;
     todoTarget.isCompleted = false;
     document.dispatchEvent(new Event(RENDER_EVENT));
+    saveData();
 }
 
 function hapusTugas(tugasId) {
@@ -132,6 +148,7 @@ function hapusTugas(tugasId) {
     if (todoTarget === -1) return;
     todos.splice(todoTarget, 1);
     document.dispatchEvent(new Event(RENDER_EVENT));
+    saveData();
 }
 
 function findTodoIndex(tugasId) {
@@ -139,6 +156,30 @@ function findTodoIndex(tugasId) {
         if (todos[index].id === tugasId) {
             return index;
         }
-    }s
+    }
     return -1;
+}
+
+function saveData() {
+    if (isStorageExist()) {
+        const parsedData = JSON.stringify(todos);
+        localStorage.setItem(DATA_KEY, parsedData);
+        document.dispatchEvent(new Event(SAVED_EVENT));
+    }
+}
+
+document.addEventListener(SAVED_EVENT, function() {
+    console.log(localStorage.getItem(DATA_KEY));
+});
+
+function loadDataFromStorage() {
+    const localData = localStorage.getItem(DATA_KEY);
+    let parsedData = JSON.parse(localData);
+
+    if (parsedData !== null) {
+        for (const todo of parsedData) {
+            todos.push(todo);
+        }
+    }
+    document.dispatchEvent(new Event(RENDER_EVENT));
 }
